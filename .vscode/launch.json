@@ -1,0 +1,34 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Frontend",
+      "type": "chrome",
+      "request": "launch",
+      "url": "https://localhost:3000", // Adjust the port if needed
+      "webRoot": "${workspaceFolder}/public",
+      "sourceMaps": true
+    },
+    {
+      "name": "Launch Backend",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/app.js",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "node",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/**/*.js"
+      ]
+    }
+  ],
+  "compounds": [
+   {
+     "name": "Launch Both",
+     "configurations": ["Launch Frontend", "Launch Backend"]
+   }
+ ]
+}
