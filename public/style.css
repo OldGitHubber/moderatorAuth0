@@ -9,14 +9,25 @@
 
 .photo {
  margin-top: 25px;
- width: 150px;
 }
 
 .result {
  font-size: larger;
 }
 
+.access-approved {
+ color: green;
+ font-weight: bold;
+}
 
+.access-forbidden {
+ color: red;
+ font-weight: bold;
+}
 
+img {
+ width: 200px;
+ height: 200px;
+}
 
 

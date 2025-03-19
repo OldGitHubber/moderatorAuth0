@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.location.href = '/logout';
  });
 
+
  // Add event listener to the call moderator button
  // Call the moderator endpoint
  // This will retrieve and display tokens if authorised
@@ -24,19 +25,22 @@ document.addEventListener('DOMContentLoaded', () => {
    const response = await fetch('/moderator', {
     credentials: 'same-origin'
    });
-   if (!response.ok) {
-    throw new Error(await response.text()); // throw new Error(`Error: ${response.statusText}`);
+   if (response.status == 403) {
+    // throw new Error(await response.text()); 
+    const data = await response.json();
+    renderForbidden(data) // Only contains failure message
+   } else {
+    const data = await response.json(); // I return the tokens just to show them and decode for a look-see
+    renderTokens(data)                  // Write the tokens to the page
    }
-
-   const data = await response.json(); // I return the tokens just to show them and decode for a look-see
-   renderTokens(data)                  // Write the tikens to the page
   } catch (err) {
    resultDiv.textContent = err.message;
   }
  });
 
 
- // On browser refresh, check if authenticated to initialise the page
+ // On browser refresh, fetch /profile. If one is returned, 
+ // the user must be authenticated so initialise the page 
  // If logged in, returns all profile data and sets appropriate buttons
  const checkAuth = async () => {
   try {
@@ -68,15 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Render the profile data in a readable form
 function renderData(data) {
- // Needed to load the picture seperately as it hadn't always downloaded by the time the html was rendered
- // so was intermittent. This makes sure it's loaded. Use its own div or the delay would render it after the text
- // if using the results div
- const img = new Image();
- img.src = data.picture;
- img.onload = function () {
-  document.getElementById('photo').innerHTML = `<img class="photo" src="${data.picture}" alt="Logged-in user photo">`
- }
-
  const anonimisedEmail = data.email ? `user@${data.email.split('@')[1]}` : `Not available`
  const html = `<p>
  <b>Name:</b> ${data.name}<br>
@@ -90,6 +85,18 @@ function renderData(data) {
  <b>sub:</b> (subject) ${data.sub}<br>
  </p>` // Subject is a unique id across different systems
  document.getElementById('result').innerHTML = html
+
+ // Needed to load the picture seperately as it hadn't always downloaded by the time the html was rendered
+ // so was intermittent. This makes sure it's loaded. Use its own div or the delay would render it after the text
+ // if using the results div
+ //const img = new Image();
+
+ const img = document.createElement('img')
+ img.src = data.picture;
+ img.onload = function () {
+  const picDiv = document.getElementById('photo')
+  picDiv.appendChild(img)
+ }
 }
 
 // Date and time is stored in ISO format so format it for readability
@@ -107,22 +114,29 @@ function formatDate(isoDate) {
   second: '2-digit',    // "52"
   timeZoneName: 'short' // "GMT"
  };
- 
+
  return date.toLocaleDateString('en-GB', options) // Convert to a readable format
 }
 
 // Write the ID and access tokens to two text areas
 function renderTokens(data) {
- const html = `<p>${data.message}<p>
- <label><b>ID Token:</label><br>
+ const html = `<p class="access-approved">${data.message}<p>
+ <label><b>ID Token:</b></label><br>
  <textarea rows="20" cols="80">${data.idToken}</textarea><br><br>
 
- <label><b>Access Token (type=${data.accessToken.token_type}). <br>Expires in ${formatSeconds(data.accessToken.expires_in)}:</label><br>
+ <label><br><b>Access Token</b> (type=${data.accessToken.token_type}).<br>
+ <b>Roles: </b>${data.roles}<br>
+ <b>Permissions: </b>${data.permissions}<br>
+ <b>Expires in: </b>${formatSeconds(data.accessToken.expires_in)}:</label><br><br>
  <textarea rows="20" cols="80">${data.accessToken.access_token}</textarea>
  `
  document.getElementById('result').innerHTML = html
 }
 
+function renderForbidden(data) {
+ const html = `<p class="access-forbidden">${data.message}</p>`
+ document.getElementById('result').innerHTML = html
+}
 
 // Token expiry is in seconds so format into a readable form
 function formatSeconds(seconds) {
